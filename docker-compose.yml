@@ -1,0 +1,10 @@
+version: '1'
+services:
+  usvs_container:
+    image: usvs
+    restart: always
+    working_dir: /app
+    volumes:
+      - ./:/app
+    command: python3 -u visa_reschedule.py --config config.yaml
+    network_mode: "host"
