@@ -60,6 +60,16 @@ JS_SCRIPT = ("var req = new XMLHttpRequest();"
              "req.send(null);"
              "return req.responseText;")
 
+def send_debug_notification(msg):
+    if config['telegram']['debug_chat_id']:
+        data = {
+            'chat_id': config['telegram']['debug_chat_id'],
+            'text': msg,
+        }
+        token = config['telegram']['bot_token']
+        url = f'https://api.telegram.org/bot{token}/sendMessage'
+        print(f"Sending debug notification {data}")
+        requests.post(url, data)
 
 def send_notification(msg):
     data = {
@@ -217,6 +227,13 @@ def info_logger(file_path, log):
     with open(file_path, "a") as file:
         file.write(str(datetime.now().time()) + ":\n" + log + "\n")
 
+def mean(mylist: list):
+    return sum(mylist)/len(mylist)
+
+def std(mylist: list):
+    mean_val = mean(mylist)
+    variance = sum([((x - mean_val) ** 2) for x in mylist]) / len(mylist) 
+    return variance ** 0.5
 
 if config['chrome_driver']['local_use']:
     options = Options()
@@ -236,7 +253,7 @@ if __name__ == "__main__":
     current_appointment_date = None
     unpaid_signed_out = True
     ban_timestamps = {}
-    banned_count = 0
+    banned_count = 0    
     while 1:
         try:
             current_date = str(datetime.now().date())
@@ -247,6 +264,7 @@ if __name__ == "__main__":
             if start_new_user:
                 t0 = time.time()
                 start_time = datetime.now()
+                retry_wait_times = []
                 total_time = 0
                 Req_count = 0
                 user_id = next(get_user)
@@ -269,7 +287,8 @@ if __name__ == "__main__":
                 print(f"Probably user {user_config['email']} is banned")
                 ban_time = datetime.now()
                 msg = f"User {user_config['email']} got banned. Start time: {start_time}, Ban time: {ban_time}, Duration: {ban_time-start_time},\n"
-                msg += f"Requests: {Req_count}, Total time: {time.time()-t0}, Max Run time: {config['time']['work_limit_hours']}, Cooldown time: {config['time']['work_cooldown_hours']}"
+                msg += f"Requests: {Req_count}, Total_retry_wait_times: {sum(retry_wait_times)}, Mean_retry_wait_times: {mean(retry_wait_times)}, std_retry_wait_times: {std(retry_wait_times)},\n"
+                msg += f"Total time: {time.time()-t0}, Max Run time: {config['time']['work_limit_hours']}, Cooldown time: {config['time']['work_cooldown_hours']}"
                 print(msg)
                 info_logger(log_file_name, msg)
                 banned_count += 1
@@ -338,6 +357,7 @@ if __name__ == "__main__":
                     unpaid_signed_out = True
                 else:
                     print("Retry Wait Time: "+ str(retry_wait_time)+ " seconds")
+                    retry_wait_times.append(retry_wait_time)
                     time.sleep(retry_wait_time)
             if appointments is not None:
                 prev_available_appointments = appointments            
@@ -345,4 +365,7 @@ if __name__ == "__main__":
             # Exception Occured
             print(f"Break the loop after exception! I will continue in a few minutes\n")
             traceback.print_exc()
+            formatted_lines = traceback.format_exc().splitlines()
+            msg = formatted_lines[0] + '\n' + formatted_lines[-1]
+            send_debug_notification(msg)
             time.sleep(random.randint(config['time']['retry_lower_bound'], config['time']['retry_upper_bound']))
