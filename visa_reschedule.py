@@ -228,12 +228,16 @@ def info_logger(file_path, log):
         file.write(str(datetime.now().time()) + ":\n" + log + "\n")
 
 def mean(mylist: list):
-    return sum(mylist)/len(mylist)
+    if len(mylist):
+        return sum(mylist)/len(mylist)
+    return 0
 
 def std(mylist: list):
-    mean_val = mean(mylist)
-    variance = sum([((x - mean_val) ** 2) for x in mylist]) / len(mylist) 
-    return variance ** 0.5
+    if len(mylist):
+        mean_val = mean(mylist)
+        variance = sum([((x - mean_val) ** 2) for x in mylist]) / len(mylist) 
+        return variance ** 0.5
+    return 0
 
 if config['chrome_driver']['local_use']:
     options = Options()
