@@ -348,7 +348,7 @@ if __name__ == "__main__":
                 t1 = time.time()
                 total_time = t1 - t0
                 print("\nWorking Time:  ~ {:.2f} minutes".format(total_time/minute))
-                if total_time > config['time']['work_limit_hours'] * hour:
+                if total_time > config['time']['work_limit_hours'] * hour and config['time']['work_cooldown_hours'] > 0:
                     # Let program rest a little
                     print("REST", f"Break-time after {config['time']['work_limit_hours']} hours | Repeated {Req_count} times")
                     driver.get(embassy_links['sign_out_link'])
