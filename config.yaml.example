@@ -42,4 +42,5 @@ time:
   work_cooldown_hours: 2.25 # hours
   ban_cooldown_hours: 5 # hours
   step_time: 0.5 # seconds
+  reschedule_max_retry_count: 5
   time_zone: 'Iran'

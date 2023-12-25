@@ -167,12 +167,12 @@ def reschedule(date, user_config, embassy_links):
     }
     r = requests.post(embassy_links['appointment_url'], headers=headers, data=data)
     if r.status_code == 200:
-        result = True
+        success = True
         msg = f"Rescheduled Successfully! Account: {user_config['email']}, {date} {time}"
     else:
-        result = False
+        success = False
         msg = f"Reschedule Failed! Account: {user_config['email']}, {date} {time}"
-    return [result, msg]
+    return [success, msg]
 
 
 def get_all_available(embassy_links):
@@ -330,20 +330,23 @@ if __name__ == "__main__":
                             paid_user_embassy_links = get_links_for_embassy(paid_user_config)
                             start_process(paid_user_config, paid_user_embassy_links)
                             current_appointment_date = get_current_appointment_date(paid_user_config, paid_user_embassy_links)
-                            available_dates = get_all_available(paid_user_embassy_links)
-                            if available_dates:
-                                msg = ""
-                                for d in available_dates:
-                                    msg = msg + "%s" % (d.get('date')) + ", "
-                                print(f'Available dates for user: {paid_user_config["email"]}:\n {msg}')
-                                date = get_accepted_date(available_dates, paid_user_config, current_appointment_date)
-                                if date:
-                                    reschedule_successful, msg = reschedule(date, paid_user_config, paid_user_embassy_links)
-                                    send_notification(msg)
+                            reschedule_retry_count = 0
+                            while reschedule_successful == False and reschedule_retry_count < config['time']['reschedule_max_retry_count']:
+                                available_dates = get_all_available(paid_user_embassy_links)
+                                if available_dates:
+                                    msg = ""
+                                    for d in available_dates:
+                                        msg = msg + "%s" % (d.get('date')) + ", "
+                                    print(f'Available dates for user: {paid_user_config["email"]}:\n {msg}')
+                                    accepted_date = get_accepted_date(available_dates, paid_user_config, current_appointment_date)
+                                    if accepted_date:
+                                        reschedule_successful, msg = reschedule(accepted_date, paid_user_config, paid_user_embassy_links)
+                                        send_notification(msg)
+                                    else:
+                                        send_debug_notification(f"Unpaid account {user_config['email']} found {new_available_date} but it was not available for paid account {paid_user_config['email']}. Rescheduling failed.")
                                 else:
-                                    send_notification(f"Unpaid account {user_config['email']} found {new_available_date} but it was not available for paid account {paid_user_config['email']}. Rescheduling failed.")
-                            else:
-                                send_notification(f"Paid account: {paid_user_config['email']} is banned. Could not reschedule for {new_available_date}")
+                                    send_debug_notification(f"Paid account: {paid_user_config['email']} is banned. Could not reschedule for {new_available_date}")
+                                reschedule_retry_count += 1
                             driver.get(paid_user_embassy_links['sign_out_link'])
                         else:
                             print(f"found new date {new_available_date} but is not in the selected period of {paid_user_config['email']}.")
