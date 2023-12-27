@@ -1,0 +1,36 @@
+users:
+- email: 'account@gmail.com'
+    password: 'account_pass'
+    schedule_id: 99999999
+    group_id: 99999999
+    embassy: 'en-am-yer'
+    period_start: '2024-03-01'
+    perido_end: '2024-06-01'
+- email: 'account@gmail.com'
+    password: 'account_pass'
+    schedule_id: 99999999
+    group_id: 99999999
+    embassy: 'en-am-yer'
+    period_start: '2024-03-01'
+    perido_end: '2024-06-01'
+
+chrome_driver:
+  local_use: True
+  hub_address: http://localhost:9515/wd/hub  # HUB_ADDRESS is mandatory only when LOCAL_USE = False
+
+telegram:
+  bot_token: 'some_token'
+  chat_id: 123456789
+  debug_chat_id: null
+  session: 'new_session'
+  api_id: 123456789
+  api_hash: 'some_hash'
+  phone_number: '123456789'
+  channel_link: 'https://t.me/some_link'
+
+
+time:
+  retry_lower_bound: 10 # seconds
+  retry_upper_bound: 120 # seconds
+  step_time: 0.5 # seconds
+  time_zone: 'Iran'
