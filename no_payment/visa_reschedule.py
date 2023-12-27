@@ -316,7 +316,7 @@ if __name__ == "__main__":
                 msg = 'Found new date(s): '
                 for appointment in appointments:
                     msg += str(appointments[appointment]) + ' '
-                send_notification(msg[:-1])
+                send_debug_notification(msg[:-1])
                 for paid_user_config in config['paid_users']:
                     reschedule_successful = False
                     for new_available_date in appointments.values():
