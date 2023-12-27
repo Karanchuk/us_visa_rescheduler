@@ -278,21 +278,21 @@ if __name__ == "__main__":
                 reschedule_successful, msg = reschedule(accepted_date, user_config, embassy_links)
                 send_notification(msg)
                 current_appointment_date = get_current_appointment_date(user_config, embassy_links)
+            
+            retry_wait_time = random.randint(config['time']['retry_lower_bound'], config['time']['retry_upper_bound'])
+            t1 = time.time()
+            total_time = t1 - t0
+            print("\nWorking Time:  ~ {:.2f} minutes".format(total_time/minute))
+            if total_time > config['time']['work_limit_hours'] * hour and config['time']['work_cooldown_hours'] > 0:
+                # Let program rest a little
+                print("REST", f"Break-time after {config['time']['work_limit_hours']} hours | Repeated {Req_count} times")
+                driver.get(embassy_links['sign_out_link'])
+                time.sleep(config['time']['work_cooldown_hours'] * hour)
+                start_new_user = True
             else:
-                retry_wait_time = random.randint(config['time']['retry_lower_bound'], config['time']['retry_upper_bound'])
-                t1 = time.time()
-                total_time = t1 - t0
-                print("\nWorking Time:  ~ {:.2f} minutes".format(total_time/minute))
-                if total_time > config['time']['work_limit_hours'] * hour and config['time']['work_cooldown_hours'] > 0:
-                    # Let program rest a little
-                    print("REST", f"Break-time after {config['time']['work_limit_hours']} hours | Repeated {Req_count} times")
-                    driver.get(embassy_links['sign_out_link'])
-                    time.sleep(config['time']['work_cooldown_hours'] * hour)
-                    start_new_user = True
-                else:
-                    print("Retry Wait Time: "+ str(retry_wait_time)+ " seconds")
-                    retry_wait_times.append(retry_wait_time)
-                    time.sleep(retry_wait_time)
+                print("Retry Wait Time: "+ str(retry_wait_time)+ " seconds")
+                retry_wait_times.append(retry_wait_time)
+                time.sleep(retry_wait_time)
         except:
             # Exception Occured
             print(f"Break the loop after exception! I will continue in a few minutes\n")
