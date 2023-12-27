@@ -264,6 +264,7 @@ if __name__ == "__main__":
                 msg += f"Total time: {time.time()-t0}, Max Run time: {config['time']['work_limit_hours']}, Cooldown time: {config['time']['work_cooldown_hours']}"
                 print(msg)
                 info_logger(log_file_name, msg)
+                send_debug_notification(msg)
                 driver.get(embassy_links['sign_out_link'])
                 time.sleep(config['time']['ban_cooldown_hours']*hour)
                 start_new_user = True
