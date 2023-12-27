@@ -213,11 +213,13 @@ def std(mylist: list):
         return variance ** 0.5
     return 0
 
+## Change this function based on your target telegram channel
 def get_date_from_telegram_message(message):
-    text = re.split(' |\n', message.text)
-    for i, element in enumerate(text):
-        if str(datetime.now().year) in element or str(datetime.now().year+1) in element:
-            return datetime.strptime(f'{text[i-2]} {text[i-1]} {text[i]}', '%d %B %Y').date()
+    if 'First Available Appointment' in message.text:
+        text = re.split(' |\n', message.text)
+        for i, element in enumerate(text):
+            if str(datetime.now().year) in element or str(datetime.now().year+1) in element:
+                return datetime.strptime(f'{text[i-2]} {text[i-1]} {text[i]}', '%d %B %Y').date()
     return None
     
 if config['chrome_driver']['local_use']:
@@ -238,6 +240,7 @@ if __name__ == "__main__":
     with tele_client:
         channel = tele_client.get_entity(config['telegram']['channel_link'])
         prev_latest_date = None
+        prev_latest_date_message_date = None
         while 1:
             try:
                 current_date = str(datetime.now().date())
@@ -248,8 +251,12 @@ if __name__ == "__main__":
                 for message in tele_client.iter_messages(channel):
                     latest_date = get_date_from_telegram_message(message)
                     if latest_date is not None:
+                        latest_date_message_date = message.date
                         break
-                if latest_date != prev_latest_date:
+                if latest_date != prev_latest_date and latest_date_message_date != prev_latest_date_message_date:
+                    msg = f'Found new date from channel: {latest_date}.'
+                    print(msg)
+                    send_notification(msg)
                     for user_config in config['users']:
                         if is_in_period(latest_date, datetime.strptime(user_config['period_start'], "%Y-%m-%d").date() , datetime.strptime(user_config['period_end'], "%Y-%m-%d").date()):
                             embassy_links = get_links_for_embassy(user_config)
@@ -274,7 +281,10 @@ if __name__ == "__main__":
                                 send_notification(msg)
                             driver.get(embassy_links['sign_out_link'])
                 prev_latest_date = latest_date
-                time.sleep(random.randint(config['time']['retry_lower_bound'], config['time']['retry_upper_bound']))
+                prev_latest_date_message_date = latest_date_message_date
+                retry_wait_time = random.randint(config['time']['retry_lower_bound'], config['time']['retry_upper_bound'])
+                print("Retry Wait Time: "+ str(retry_wait_time)+ " seconds")
+                time.sleep(retry_wait_time)
             except:
                 # Exception Occured
                 print(f"Break the loop after exception! I will continue in a few minutes\n")
