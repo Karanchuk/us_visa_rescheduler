@@ -216,7 +216,7 @@ def std(mylist: list):
 def get_date_from_telegram_message(message):
     text = re.split(' |\n', message.text)
     for i, element in enumerate(text):
-        if str(datetime.now().year) in element:
+        if str(datetime.now().year) in element or str(datetime.now().year+1) in element:
             return datetime.strptime(f'{text[i-2]} {text[i-1]} {text[i]}', '%d %B %Y').date()
     return None
     
