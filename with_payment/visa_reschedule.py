@@ -6,7 +6,7 @@ import random
 import requests
 import traceback
 import yaml
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -15,7 +15,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait as Wait
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
-from selenium.common.exceptions import NoSuchElementException
+# from selenium.common.exceptions import NoSuchElementException
 from embassy import embassies
 
 parser = argparse.ArgumentParser()
@@ -120,24 +120,8 @@ def start_process(user_config, embassy_links):
     auto_action("Enter Panel", "name", "commit", "click", "", config['time']['step_time'])
     Wait(driver, 60).until(EC.presence_of_element_located((By.XPATH, "//a[contains(text(), '" + get_embassy_info(user_config['embassy'])['regex_continue'] + "')]")))
     print("\n\tlogin successful!\n")
-    
-## This function may need to change based on your Embassy (If your embassy shows more than one date in the payment page.)
-def get_first_available_appointments(embassy_links):
-    driver.get(embassy_links['payment_url'])
-    res = {}
-    location = driver.find_elements(by=By.XPATH, value=f'//*[@id="paymentOptions"]/div[2]/table/tbody/tr/td[1]')
-    status = driver.find_elements(by=By.XPATH, value=f'//*[@id="paymentOptions"]/div[2]/table/tbody/tr/td[2]')
-    if not location or not status:
-        return None
-    location = location[0].text
-    try:
-        status = datetime.strptime(status[0].text, "%d %B, %Y").date()
-    except ValueError:
-        status = status[0].text
-    res[location] = status
-    return res
         
-def get_unpaid_user_id():
+def get_user_id():
     id = 0
     while True:
         yield id
@@ -200,13 +184,6 @@ def get_current_appointment_date(user_config, embassy_links):
     date_str = ' '.join(elements[0].text.split(' ')[2:5])
     return datetime.strptime(date_str, '%d %B, %Y,').date()
 
-
-def is_logged_in():
-    content = driver.page_source
-    if(content.find("error") != -1):
-        return False
-    return True
-
 def is_in_period(date, start, end):
     return (end > date and date >= start)
 
@@ -226,7 +203,7 @@ def get_accepted_date(dates, user_config, current_appointment_date):
 def info_logger(file_path, log):
     with open(file_path, "a") as file:
         file.write(str(datetime.now().time()) + ":\n" + log + "\n")
-
+        
 def mean(mylist: list):
     if len(mylist):
         return sum(mylist)/len(mylist)
@@ -251,13 +228,9 @@ else:
 
 if __name__ == "__main__":
     start_new_user = True
-    get_user = get_unpaid_user_id()
+    get_user = get_user_id()
     previous_date = str(datetime.now().date())
-    prev_available_appointments = None
     current_appointment_date = None
-    unpaid_signed_out = True
-    ban_timestamps = {}
-    banned_count = 0    
     while 1:
         try:
             current_date = str(datetime.now().date())
@@ -272,84 +245,38 @@ if __name__ == "__main__":
                 total_time = 0
                 Req_count = 0
                 user_id = next(get_user)
-                user_config = config['unpaid_users'][user_id]
+                user_config = config['users'][user_id]
                 embassy_links = get_links_for_embassy(user_config)
                 start_process(user_config, embassy_links)
-                unpaid_signed_out = False
+                current_appointment_date = get_current_appointment_date(user_config, embassy_links)
                 print(f'User: {user_config["email"]} Starting...')
                 start_new_user = False
-            if unpaid_signed_out:
-                start_process(user_config, embassy_links)
-                unpaid_signed_out = False
             Req_count += 1
             msg = "-" * 60 + f"\nRequest count: {Req_count}, Log time: {datetime.today()}\n"
             print(msg)
             info_logger(log_file_name, msg)
-                
-            appointments = get_first_available_appointments(embassy_links)
-            if all(x == "No Appointments Available" for x in appointments.values()):
-                print(f"Probably user {user_config['email']} is banned")
+            available_dates = get_all_available(embassy_links)
+            if not available_dates:
+                print(f"probably user {user_config['email']} is banned.")
                 ban_time = datetime.now()
                 msg = f"User {user_config['email']} got banned. Start time: {start_time}, Ban time: {ban_time}, Duration: {ban_time-start_time},\n"
                 msg += f"Requests: {Req_count}, Total_retry_wait_times: {sum(retry_wait_times)}, Mean_retry_wait_times: {mean(retry_wait_times)}, std_retry_wait_times: {std(retry_wait_times)},\n"
                 msg += f"Total time: {time.time()-t0}, Max Run time: {config['time']['work_limit_hours']}, Cooldown time: {config['time']['work_cooldown_hours']}"
                 print(msg)
                 info_logger(log_file_name, msg)
-                banned_count += 1
-                ban_timestamps[user_id] = ban_time
                 driver.get(embassy_links['sign_out_link'])
-                unpaid_signed_out = True
+                time.sleep(config['time']['ban_cooldown_hours']*hour)
                 start_new_user = True
-                if banned_count == len(config['unpaid_users']):
-                    temp = ban_time
-                    for id in ban_timestamps:
-                        if ban_timestamps[id] < temp:
-                            temp = ban_timestamps[id]
-                    time_from_first_ban = ban_time-temp
-                    time_to_ban = timedelta(hours=config['time']['ban_cooldown_hours']) - time_from_first_ban
-                    if time_to_ban > timedelta(0):
-                        msg = f"All users are banned, resting for {time_to_ban}"
-                        print(msg)
-                        info_logger(log_file_name, msg)
-                        time.sleep(time_to_ban.total_seconds())
-                    banned_count -= 1
                 continue
-            if appointments is not None and appointments != prev_available_appointments:
-                msg = 'Found new date(s): '
-                for appointment in appointments:
-                    msg += str(appointments[appointment]) + ' '
-                send_notification(msg[:-1])
-                for paid_user_config in config['paid_users']:
-                    reschedule_successful = False
-                    for new_available_date in appointments.values():
-                        if reschedule_successful:
-                            break
-                        if is_in_period(new_available_date, datetime.strptime(paid_user_config['period_start'], "%Y-%m-%d").date() , datetime.strptime(paid_user_config['period_end'], "%Y-%m-%d").date()):
-                            driver.get(embassy_links['sign_out_link'])
-                            unpaid_signed_out = True
-                            paid_user_embassy_links = get_links_for_embassy(paid_user_config)
-                            start_process(paid_user_config, paid_user_embassy_links)
-                            current_appointment_date = get_current_appointment_date(paid_user_config, paid_user_embassy_links)
-                            reschedule_retry_count = 0
-                            while reschedule_successful == False and reschedule_retry_count < config['time']['reschedule_max_retry_count']:
-                                available_dates = get_all_available(paid_user_embassy_links)
-                                if available_dates:
-                                    msg = ""
-                                    for d in available_dates:
-                                        msg = msg + "%s" % (d.get('date')) + ", "
-                                    print(f'Available dates for user: {paid_user_config["email"]}:\n {msg}')
-                                    accepted_date = get_accepted_date(available_dates, paid_user_config, current_appointment_date)
-                                    if accepted_date:
-                                        reschedule_successful, msg = reschedule(accepted_date, paid_user_config, paid_user_embassy_links)
-                                        send_notification(msg)
-                                    else:
-                                        send_debug_notification(f"Unpaid account {user_config['email']} found {new_available_date} but it was not available for paid account {paid_user_config['email']}. Rescheduling failed.")
-                                else:
-                                    send_debug_notification(f"Paid account: {paid_user_config['email']} is banned. Could not reschedule for {new_available_date}")
-                                reschedule_retry_count += 1
-                            driver.get(paid_user_embassy_links['sign_out_link'])
-                        else:
-                            print(f"found new date {new_available_date} but is not in the selected period of {paid_user_config['email']}.")
+            msg = ""
+            for d in available_dates:
+                msg = msg + "%s" % (d.get('date')) + ", "
+            print(f'Available dates for user: {user_config["email"]}:\n {msg[:-2]}')
+            accepted_date = get_accepted_date(available_dates, user_config, current_appointment_date)
+            if accepted_date:
+                reschedule_successful, msg = reschedule(accepted_date, user_config, embassy_links)
+                send_notification(msg)
+                current_appointment_date = get_current_appointment_date(user_config, embassy_links)
             else:
                 retry_wait_time = random.randint(config['time']['retry_lower_bound'], config['time']['retry_upper_bound'])
                 t1 = time.time()
@@ -361,13 +288,10 @@ if __name__ == "__main__":
                     driver.get(embassy_links['sign_out_link'])
                     time.sleep(config['time']['work_cooldown_hours'] * hour)
                     start_new_user = True
-                    unpaid_signed_out = True
                 else:
                     print("Retry Wait Time: "+ str(retry_wait_time)+ " seconds")
                     retry_wait_times.append(retry_wait_time)
                     time.sleep(retry_wait_time)
-            if appointments is not None:
-                prev_available_appointments = appointments            
         except:
             # Exception Occured
             print(f"Break the loop after exception! I will continue in a few minutes\n")
