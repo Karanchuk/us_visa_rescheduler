@@ -249,6 +249,7 @@ if __name__ == "__main__":
                     msg = 'Its a new day. No news. Still working...'
                     send_debug_notification(msg)
                     print(msg)
+                previous_date = current_date
                 latest_date = None
                 for message in tele_client.iter_messages(channel):
                     latest_date = get_date_from_telegram_message(message)
