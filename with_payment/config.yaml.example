@@ -19,7 +19,7 @@ chrome_driver:
   hub_address: http://localhost:9515/wd/hub  # HUB_ADDRESS is mandatory only when LOCAL_USE = False
 
 telegram:
-  bot_token: some_token
+  bot_token: 'some_token'
   chat_id: 123456789
   debug_chat_id: null
 

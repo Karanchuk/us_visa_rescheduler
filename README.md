@@ -12,13 +12,13 @@ There are three approaches you can use:
 
 In this method only the paid account checks the available dates and will reschedule the appointment if a date is found in the given period.
 
-# no_payment
+# no_payment (Not Recommended)
 ## Requirements
 1. Docker
 2. One or multiple accounts without paid schedules
 3. One or multiple accounts with paid schedules
 
-In this method unpaid accounts check the closest available date and will reschedule the appointment of the paid accounts if a date is found in the given period.
+In this method unpaid accounts check the closest available date and will reschedule the appointment of the paid accounts if a date is found in the given period. I have tested this method and I believe that the date that the unpaid accounts show is not accurate so I don't recommend using this method.
 
 # poll_telegram_channel
 ## Requirements
