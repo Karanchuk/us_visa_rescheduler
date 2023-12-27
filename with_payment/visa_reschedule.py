@@ -125,7 +125,7 @@ def get_user_id():
     id = 0
     while True:
         yield id
-        id = (id + 1) % len(config['unpaid_users'])
+        id = (id + 1) % len(config['users'])
 
 def reschedule(date, user_config, embassy_links):
     time = get_time(date, embassy_links)
