@@ -256,7 +256,7 @@ if __name__ == "__main__":
             current_date = str(datetime.now().date())
             log_file_name = f"log_{current_date}.txt"
             if current_date != previous_date:
-                send_notification('Its a new day. No news. Still working...')
+                send_debug_notification('Its a new day. No news. Still working...')
             previous_date = current_date
             if start_new_user:
                 t0 = time.time()

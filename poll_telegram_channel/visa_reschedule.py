@@ -247,7 +247,7 @@ if __name__ == "__main__":
                 log_file_name = f"log_{current_date}.txt"
                 if current_date != previous_date:
                     msg = 'Its a new day. No news. Still working...'
-                    send_notification(msg)
+                    send_debug_notification(msg)
                     print(msg)
                 latest_date = None
                 for message in tele_client.iter_messages(channel):

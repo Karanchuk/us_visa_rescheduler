@@ -231,12 +231,13 @@ if __name__ == "__main__":
     get_user = get_user_id()
     previous_date = str(datetime.now().date())
     current_appointment_date = None
+    ban_retry_count = 0
     while 1:
         try:
             current_date = str(datetime.now().date())
             log_file_name = f"log_{current_date}.txt"
             if current_date != previous_date:
-                send_notification('Its a new day. No news. Still working...')
+                send_debug_notification('Its a new day. No news. Still working...')
             previous_date = current_date
             if start_new_user:
                 t0 = time.time()
@@ -257,17 +258,24 @@ if __name__ == "__main__":
             info_logger(log_file_name, msg)
             available_dates = get_all_available(embassy_links)
             if not available_dates:
-                print(f"probably user {user_config['email']} is banned.")
-                ban_time = datetime.now()
-                msg = f"User {user_config['email']} got banned. Start time: {start_time}, Ban time: {ban_time}, Duration: {ban_time-start_time},\n"
-                msg += f"Requests: {Req_count}, Total_retry_wait_times: {sum(retry_wait_times)}, Mean_retry_wait_times: {mean(retry_wait_times)}, std_retry_wait_times: {std(retry_wait_times)},\n"
-                msg += f"Total time: {time.time()-t0}, Max Run time: {config['time']['work_limit_hours']}, Cooldown time: {config['time']['work_cooldown_hours']}"
-                print(msg)
-                info_logger(log_file_name, msg)
-                send_debug_notification(msg)
-                driver.get(embassy_links['sign_out_link'])
-                time.sleep(config['time']['ban_cooldown_hours']*hour)
-                start_new_user = True
+                ban_retry_count += 1
+                if ban_retry_count > config['time']['max_ban_retries']:
+                    ban_retry_count = 0
+                    print(f"probably user {user_config['email']} is banned.")
+                    ban_time = datetime.now()
+                    msg = f"User {user_config['email']} got banned. Start time: {start_time}, Ban time: {ban_time}, Duration: {ban_time-start_time},\n"
+                    msg += f"Requests: {Req_count}, Total_retry_wait_times: {sum(retry_wait_times)}, Mean_retry_wait_times: {mean(retry_wait_times)}, std_retry_wait_times: {std(retry_wait_times)},\n"
+                    msg += f"Total time: {time.time()-t0}, Max Run time: {config['time']['work_limit_hours']}, Cooldown time: {config['time']['work_cooldown_hours']}"
+                    print(msg)
+                    info_logger(log_file_name, msg)
+                    send_debug_notification(msg)
+                    driver.get(embassy_links['sign_out_link'])
+                    time.sleep(config['time']['ban_cooldown_hours']*hour)
+                    start_new_user = True
+                    continue
+                retry_wait_time = random.randint(config['time']['retry_lower_bound'], config['time']['retry_upper_bound'])
+                print(f'No available dates received. Retrying in {retry_wait_time} seconds...')
+                time.sleep(retry_wait_time)
                 continue
             msg = ""
             for d in available_dates:
