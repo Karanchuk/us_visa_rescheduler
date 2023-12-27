@@ -8,3 +8,8 @@ services:
       - ./:/app
     command: python3 -u visa_reschedule.py --config config.yaml
     network_mode: "host"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "10"

@@ -246,7 +246,9 @@ if __name__ == "__main__":
                 current_date = str(datetime.now().date())
                 log_file_name = f"log_{current_date}.txt"
                 if current_date != previous_date:
-                    send_notification('Its a new day. No news. Still working...')
+                    msg = 'Its a new day. No news. Still working...'
+                    send_notification(msg)
+                    print(msg)
                 latest_date = None
                 for message in tele_client.iter_messages(channel):
                     latest_date = get_date_from_telegram_message(message)
