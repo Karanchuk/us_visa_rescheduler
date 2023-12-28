@@ -308,4 +308,7 @@ if __name__ == "__main__":
             formatted_lines = traceback.format_exc().splitlines()
             msg = formatted_lines[0] + '\n' + formatted_lines[-1]
             send_debug_notification(msg)
+            driver.get(embassy_links['sign_out_link'])
+            start_new_user = True
             time.sleep(random.randint(config['time']['retry_lower_bound'], config['time']['retry_upper_bound']))
+            

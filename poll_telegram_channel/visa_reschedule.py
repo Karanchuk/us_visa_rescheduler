@@ -200,18 +200,6 @@ def get_accepted_date(dates, user_config, current_appointment_date):
 def info_logger(file_path, log):
     with open(file_path, "a") as file:
         file.write(str(datetime.now().time()) + ":\n" + log + "\n")
-        
-def mean(mylist: list):
-    if len(mylist):
-        return sum(mylist)/len(mylist)
-    return 0
-
-def std(mylist: list):
-    if len(mylist):
-        mean_val = mean(mylist)
-        variance = sum([((x - mean_val) ** 2) for x in mylist]) / len(mylist) 
-        return variance ** 0.5
-    return 0
 
 ## Change this function based on your target telegram channel
 def get_date_from_telegram_message(message):
@@ -232,9 +220,7 @@ if config['chrome_driver']['local_use']:
 else:
     driver = webdriver.Remote(command_executor=config['chrome_driver']['hub_address'], options=webdriver.ChromeOptions())
 
-
 tele_client = TelegramClient(config['telegram']['session'], config['telegram']['api_id'], config['telegram']['api_hash']).start(phone=config['telegram']['phone_number'])
-    
     
 @tele_client.on(events.NewMessage(chats=[config['telegram']['channel_id']]))
 async def handler(event):
