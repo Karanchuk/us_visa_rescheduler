@@ -282,4 +282,7 @@ async def handler(event):
         
         
 if __name__ == "__main__":
+    msg = 'Started workings!'
+    print(msg)
+    send_debug_notification(msg)
     tele_client.run_until_disconnected()
