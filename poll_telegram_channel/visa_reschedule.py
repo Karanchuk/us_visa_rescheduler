@@ -241,7 +241,8 @@ async def handler(event):
     try:
         new_date = get_date_from_telegram_message(event)
         if new_date is None:
-            msg = 'New message received but found no date.'
+            msg = 'New message received but found no date.\n'
+            msg += f'Message: {event.text}'
             print(msg)
             send_debug_notification(msg)
         else:
