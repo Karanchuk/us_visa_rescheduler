@@ -239,7 +239,6 @@ if __name__ == "__main__":
     previous_date = str(datetime.now().date())
     with tele_client:
         channel = tele_client.get_entity(config['telegram']['channel_link'])
-        prev_latest_date = None
         prev_latest_date_message_date = None
         while 1:
             try:
@@ -256,7 +255,7 @@ if __name__ == "__main__":
                     if latest_date is not None:
                         latest_date_message_date = message.date
                         break
-                if latest_date != prev_latest_date and latest_date_message_date != prev_latest_date_message_date:
+                if latest_date_message_date != prev_latest_date_message_date:
                     msg = f'Found new date from channel: {latest_date}.'
                     print(msg)
                     send_notification(msg)
@@ -283,7 +282,6 @@ if __name__ == "__main__":
                                 reschedule_successful, msg = reschedule(accepted_date, user_config, embassy_links)
                                 send_notification(msg)
                             driver.get(embassy_links['sign_out_link'])
-                prev_latest_date = latest_date
                 prev_latest_date_message_date = latest_date_message_date
                 retry_wait_time = random.randint(config['time']['retry_lower_bound'], config['time']['retry_upper_bound'])
                 print("Retry Wait Time: "+ str(retry_wait_time)+ " seconds")
