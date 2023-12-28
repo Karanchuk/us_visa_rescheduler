@@ -366,7 +366,7 @@ if __name__ == "__main__":
             prev_available_appointments = appointments            
         except:
             # Exception Occured
-            print(f"Break the loop after exception! I will continue in a few minutes\n")
+            print("Break the loop after exception! I will continue in a few minutes")
             traceback.print_exc()
             formatted_lines = traceback.format_exc().splitlines()
             msg = formatted_lines[0] + '\n' + formatted_lines[-1]

@@ -17,7 +17,7 @@ from selenium.webdriver.support.ui import WebDriverWait as Wait
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 # from selenium.common.exceptions import NoSuchElementException
-from telethon.sync import TelegramClient
+from telethon import TelegramClient, events
 
 from embassy import embassies
 
@@ -235,62 +235,51 @@ else:
 
 tele_client = TelegramClient(config['telegram']['session'], config['telegram']['api_id'], config['telegram']['api_hash']).start(phone=config['telegram']['phone_number'])
     
+    
+@tele_client.on(events.NewMessage(chats=[config['telegram']['channel_id']]))
+async def handler(event):
+    try:
+        new_date = get_date_from_telegram_message(event)
+        if new_date is None:
+            msg = 'New message received but found no date.'
+            print(msg)
+            send_debug_notification(msg)
+        else:
+            msg = f'Found new date from channel: {new_date}.'
+            print(msg)
+            send_notification(msg)
+            for user_config in config['users']:
+                if is_in_period(new_date, datetime.strptime(user_config['period_start'], "%Y-%m-%d").date() , datetime.strptime(user_config['period_end'], "%Y-%m-%d").date()):
+                    embassy_links = get_links_for_embassy(user_config)
+                    start_process(user_config, embassy_links)
+                    current_appointment_date = get_current_appointment_date(user_config, embassy_links)
+                    available_dates = get_all_available(embassy_links)
+                    if not available_dates:
+                        print(f"Probably user {user_config['email']} is banned.")
+                        msg = f"User {user_config['email']} got banned. Ban time: {datetime.now()}"
+                        print(msg)
+                        current_date = str(datetime.now().date())
+                        log_file_name = f"log_{current_date}.txt"
+                        info_logger(log_file_name, msg)
+                        send_debug_notification(msg)
+                        driver.get(embassy_links['sign_out_link'])
+                        continue
+                    msg = ""
+                    for d in available_dates:
+                        msg = msg + "%s" % (d.get('date')) + ", "
+                    print(f'Available dates for user: {user_config["email"]}:\n {msg[:-2]}')
+                    accepted_date = get_accepted_date(available_dates, user_config, current_appointment_date)
+                    if accepted_date:
+                        _ , msg = reschedule(accepted_date, user_config, embassy_links)
+                        send_notification(msg)
+                    driver.get(embassy_links['sign_out_link'])
+    except:
+        print(f"Exception occured!")
+        traceback.print_exc()
+        formatted_lines = traceback.format_exc().splitlines()
+        msg = formatted_lines[0] + '\n' + formatted_lines[-1]
+        send_debug_notification(msg)
+        
+        
 if __name__ == "__main__":
-    previous_date = str(datetime.now().date())
-    with tele_client:
-        channel = tele_client.get_entity(config['telegram']['channel_link'])
-        prev_latest_date_message_date = None
-        while 1:
-            try:
-                current_date = str(datetime.now().date())
-                log_file_name = f"log_{current_date}.txt"
-                if current_date != previous_date:
-                    msg = 'Its a new day. No news. Still working...'
-                    send_debug_notification(msg)
-                    print(msg)
-                previous_date = current_date
-                latest_date = None
-                for message in tele_client.iter_messages(channel):
-                    latest_date = get_date_from_telegram_message(message)
-                    if latest_date is not None:
-                        latest_date_message_date = message.date
-                        break
-                if latest_date_message_date != prev_latest_date_message_date:
-                    msg = f'Found new date from channel: {latest_date}.'
-                    print(msg)
-                    send_notification(msg)
-                    for user_config in config['users']:
-                        if is_in_period(latest_date, datetime.strptime(user_config['period_start'], "%Y-%m-%d").date() , datetime.strptime(user_config['period_end'], "%Y-%m-%d").date()):
-                            embassy_links = get_links_for_embassy(user_config)
-                            start_process(user_config, embassy_links)
-                            current_appointment_date = get_current_appointment_date(user_config, embassy_links)
-                            available_dates = get_all_available(embassy_links)
-                            if not available_dates:
-                                print(f"probably user {user_config['email']} is banned.")
-                                msg = f"User {user_config['email']} got banned. Ban time: {datetime.now()}"
-                                print(msg)
-                                info_logger(log_file_name, msg)
-                                send_debug_notification(msg)
-                                driver.get(embassy_links['sign_out_link'])
-                                continue
-                            msg = ""
-                            for d in available_dates:
-                                msg = msg + "%s" % (d.get('date')) + ", "
-                            print(f'Available dates for user: {user_config["email"]}:\n {msg[:-2]}')
-                            accepted_date = get_accepted_date(available_dates, user_config, current_appointment_date)
-                            if accepted_date:
-                                reschedule_successful, msg = reschedule(accepted_date, user_config, embassy_links)
-                                send_notification(msg)
-                            driver.get(embassy_links['sign_out_link'])
-                prev_latest_date_message_date = latest_date_message_date
-                retry_wait_time = random.randint(config['time']['retry_lower_bound'], config['time']['retry_upper_bound'])
-                print("Retry Wait Time: "+ str(retry_wait_time)+ " seconds")
-                time.sleep(retry_wait_time)
-            except:
-                # Exception Occured
-                print(f"Break the loop after exception! I will continue in a few minutes\n")
-                traceback.print_exc()
-                formatted_lines = traceback.format_exc().splitlines()
-                msg = formatted_lines[0] + '\n' + formatted_lines[-1]
-                send_debug_notification(msg)
-                time.sleep(random.randint(config['time']['retry_lower_bound'], config['time']['retry_upper_bound']))
+    tele_client.run_until_disconnected()

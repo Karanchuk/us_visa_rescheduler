@@ -303,7 +303,7 @@ if __name__ == "__main__":
                 time.sleep(retry_wait_time)
         except:
             # Exception Occured
-            print(f"Break the loop after exception! I will continue in a few minutes\n")
+            print("Break the loop after exception! I will continue in a few minutes")
             traceback.print_exc()
             formatted_lines = traceback.format_exc().splitlines()
             msg = formatted_lines[0] + '\n' + formatted_lines[-1]
