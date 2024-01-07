@@ -5,14 +5,14 @@ users:
     group_id: 99999999
     embassy: 'en-am-yer'
     period_start: '2024-03-01'
-    perido_end: '2024-06-01'
+    period_end: '2024-06-01'
   - email: 'account@gmail.com'
     password: 'account_pass'
     schedule_id: 99999999
     group_id: 99999999
     embassy: 'en-am-yer'
     period_start: '2024-03-01'
-    perido_end: '2024-06-01'
+    period_end: '2024-06-01'
 
 chrome_driver:
   local_use: True
