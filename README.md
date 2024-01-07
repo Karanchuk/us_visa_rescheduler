@@ -42,3 +42,8 @@ In this method the last message from a telegram channel is polled and if a new d
 # Acknowledgements
 Thanks to the contributors of the repos: [visa_rescheduler](https://github.com/uxDaniel/visa_rescheduler), [us_visa_scheduler](https://github.com/Soroosh-N/us_visa_scheduler), [us_visa_scheduler_telegram](https://github.com/shcheglovnd/us_visa_scheduler_telegram), and [visa_rescheduler_aws](https://github.com/dvalbuena1/visa_rescheduler_aws)
 
+# Donations
+Consider buying me a coffee if this helped you.
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/aflt)
+
