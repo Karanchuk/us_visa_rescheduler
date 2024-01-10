@@ -232,6 +232,7 @@ if __name__ == "__main__":
     previous_date = str(datetime.now().date())
     current_appointment_date = None
     ban_retry_count = 0
+    exception_occured = False
     while 1:
         try:
             current_date = str(datetime.now().date())
@@ -240,11 +241,12 @@ if __name__ == "__main__":
                 send_debug_notification('Its a new day. No news. Still working...')
             previous_date = current_date
             if start_new_user:
-                t0 = time.time()
-                start_time = datetime.now()
-                retry_wait_times = []
-                total_time = 0
-                Req_count = 0
+                if not exception_occured:
+                    t0 = time.time()
+                    start_time = datetime.now()
+                    retry_wait_times = []
+                    Req_count = 0
+                exception_occured = False
                 user_id = next(get_user)
                 user_config = config['users'][user_id]
                 embassy_links = get_links_for_embassy(user_config)
@@ -288,8 +290,7 @@ if __name__ == "__main__":
                 current_appointment_date = get_current_appointment_date(user_config, embassy_links)
             
             retry_wait_time = random.randint(config['time']['retry_lower_bound'], config['time']['retry_upper_bound'])
-            t1 = time.time()
-            total_time = t1 - t0
+            total_time = time.time() - t0
             print("\nWorking Time:  ~ {:.2f} minutes".format(total_time/minute))
             if total_time > config['time']['work_limit_hours'] * hour and config['time']['work_cooldown_hours'] > 0:
                 # Let program rest a little
@@ -303,6 +304,7 @@ if __name__ == "__main__":
                 time.sleep(retry_wait_time)
         except:
             # Exception Occured
+            exception_occured = True
             print("Break the loop after exception! I will continue in a few minutes")
             traceback.print_exc()
             formatted_lines = traceback.format_exc().splitlines()
