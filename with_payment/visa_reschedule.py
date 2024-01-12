@@ -246,10 +246,10 @@ if __name__ == "__main__":
                     start_time = datetime.now()
                     retry_wait_times = []
                     Req_count = 0
+                    user_id = next(get_user)
+                    user_config = config['users'][user_id]
+                    embassy_links = get_links_for_embassy(user_config)
                 exception_occured = False
-                user_id = next(get_user)
-                user_config = config['users'][user_id]
-                embassy_links = get_links_for_embassy(user_config)
                 start_process(user_config, embassy_links)
                 current_appointment_date = get_current_appointment_date(user_config, embassy_links)
                 print(f'User: {user_config["email"]} Starting...')

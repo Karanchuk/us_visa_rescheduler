@@ -234,9 +234,10 @@ async def handler(event):
         else:
             msg = f'Found new date from channel: {new_date}.'
             print(msg)
-            send_notification(msg)
+            send_debug_notification(msg)
             for user_config in config['users']:
                 if is_in_period(new_date, datetime.strptime(user_config['period_start'], "%Y-%m-%d").date() , datetime.strptime(user_config['period_end'], "%Y-%m-%d").date()):
+                    send_notification(msg)
                     embassy_links = get_links_for_embassy(user_config)
                     start_process(user_config, embassy_links)
                     current_appointment_date = get_current_appointment_date(user_config, embassy_links)

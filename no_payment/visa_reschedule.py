@@ -250,7 +250,8 @@ if __name__ == "__main__":
     current_appointment_date = None
     unpaid_signed_out = True
     ban_timestamps = {}
-    banned_count = 0    
+    banned_count = 0
+    exception_occured = False
     while 1:
         try:
             current_date = str(datetime.now().date())
@@ -259,14 +260,16 @@ if __name__ == "__main__":
                 send_debug_notification('Its a new day. No news. Still working...')
             previous_date = current_date
             if start_new_user:
-                t0 = time.time()
-                start_time = datetime.now()
-                retry_wait_times = []
-                total_time = 0
-                Req_count = 0
-                user_id = next(get_user)
-                user_config = config['unpaid_users'][user_id]
-                embassy_links = get_links_for_embassy(user_config)
+                if not exception_occured:
+                    t0 = time.time()
+                    start_time = datetime.now()
+                    retry_wait_times = []
+                    total_time = 0
+                    Req_count = 0
+                    user_id = next(get_user)
+                    user_config = config['unpaid_users'][user_id]
+                    embassy_links = get_links_for_embassy(user_config)
+                exception_occured = False
                 start_process(user_config, embassy_links)
                 unpaid_signed_out = False
                 print(f'User: {user_config["email"]} Starting...')
@@ -366,9 +369,13 @@ if __name__ == "__main__":
             prev_available_appointments = appointments            
         except:
             # Exception Occured
+            start_new_user = True
+            exception_occured = True
             print("Break the loop after exception! I will continue in a few minutes")
             traceback.print_exc()
             formatted_lines = traceback.format_exc().splitlines()
             msg = formatted_lines[0] + '\n' + formatted_lines[-1]
             send_debug_notification(msg)
+            driver.get(embassy_links['sign_out_link'])
+            unpaid_signed_out = True
             time.sleep(random.randint(config['time']['retry_lower_bound'], config['time']['retry_upper_bound']))
