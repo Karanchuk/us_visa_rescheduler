@@ -37,7 +37,9 @@ In this method the last message from a telegram channel is polled and if a new d
 
 **Note**: You can also create a `systemd` service using the .service file in this repo. Make sure to change the directories.
 
-**NOTE:** I have not written the code. I only fixed its issues to make it working for the Armenia Yerevan Embassy. I will not be maintaining this repo after I receive my Visa appointment so please use with caution. Please contact me if you think there is something wrong with the code. PRs are welcomed.
+# Disclamer
+I have not tested the parts of the code that do the rescheduling (I copied those parts from other repos). I only made the code working for the Armenia Yerevan Embassy. You may need small modifications to make it work for your own embassy.
+I will not be maintaining this repo after I receive my Visa appointment so please use with caution. Feel free to open issues if you think there is something wrong with the code. PRs are welcomed.
 
 # Acknowledgements
 Thanks to the contributors of the repos: [visa_rescheduler](https://github.com/uxDaniel/visa_rescheduler), [us_visa_scheduler](https://github.com/Soroosh-N/us_visa_scheduler), [us_visa_scheduler_telegram](https://github.com/shcheglovnd/us_visa_scheduler_telegram), and [visa_rescheduler_aws](https://github.com/dvalbuena1/visa_rescheduler_aws)
