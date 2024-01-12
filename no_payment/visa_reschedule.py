@@ -287,6 +287,9 @@ if __name__ == "__main__":
                 msg = 'Website did not send appointment data.'
                 print(msg)
                 info_logger(log_file_name, msg)
+                driver.get(embassy_links['sign_out_link'])
+                unpaid_signed_out = True
+                start_new_user = True
                 continue
             if all(x == "No Appointments Available" for x in appointments.values()):
                 print(f"Probably user {user_config['email']} is banned.")
