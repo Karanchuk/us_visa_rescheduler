@@ -20,14 +20,15 @@ In this method only the paid account checks the available dates and will resched
 
 In this method unpaid accounts check the closest available date and will reschedule the appointment of the paid accounts if a date is found in the given period. Please note that the date that the unpaid accounts show may not be accurate.
 
-# poll_telegram_channel
+# poll_telegram_channel (Special Case)
 ## Requirements
 1. Docker
-2. A telegram channel that notifies users when a new appointment date is found
-3. Telegram API information
+2. A telegram channel that sends a message when a new appointment date is found
+3. Your Telegram API information
 4. One or multiple accounts with paid schedules
 
-In this method the last message from a telegram channel is polled and if a new date is found by the channel it will reschedule to that date.
+In this method if a new message is sent in a specific telegram channel that includes a new schedule date, the script will read the message, extract the date, and reschedule to that date. 
+This method is a special case for people who are joined in a telegram channel ran by a bot that notifies users when a new schedule date is available.
 
 # How to use
 1. create `config.yaml` based on `config.yaml.example`
