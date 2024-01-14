@@ -34,7 +34,7 @@ This method is a special case for people who are joined in a telegram channel ra
 1. create `config.yaml` based on `config.yaml.example`
 2. run `./build_docker_image.sh`
 3. run `./create_telegram_session.sh` if needed
-3. run `docker compose up`
+4. run `docker compose up`
 
 **Note**: You can also create a `systemd` service using the .service file in this repo. Make sure to change the directories.
 
