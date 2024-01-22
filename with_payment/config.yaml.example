@@ -33,5 +33,12 @@ time:
   time_zone: 'Iran'
   max_ban_retries: 5 # times
 
-download_proxy: null
-connection_proxy : null
+download_proxy: # null
+  proxy_type: "http"
+  addr: "172.17.0.1"
+  port: "20801"
+
+connection_proxy : # null
+  proxy_type: "http"
+  addr: "172.17.0.1"
+  port: "20801"

@@ -37,6 +37,15 @@ with open(args.config) as f:
 os.environ['TZ'] = config['time']['time_zone']
 time.tzset()
 
+download_proxy_str = None
+if config['download_proxy']:
+    download_proxy_str = f"{config['download_proxy']['proxy_type']}://{config['download_proxy']['addr']}:{config['download_proxy']['port']}"
+download_proxies = {"http": download_proxy_str, "https": download_proxy_str}
+connection_proxy_str = None
+if config['connection_proxy']:
+    connection_proxy_str = f"{config['connection_proxy']['proxy_type']}://{config['connection_proxy']['addr']}:{config['connection_proxy']['port']}"
+connection_proxies = {"http": connection_proxy_str, "https": connection_proxy_str}
+
 # Time Section:
 minute = 60
 hour = 60 * minute
@@ -77,7 +86,7 @@ def send_debug_notification(msg):
         token = config['telegram']['bot_token']
         url = f'https://api.telegram.org/bot{token}/sendMessage'
         print(f"Sending debug notification {data}")
-        requests.post(url, data)
+        requests.post(url, data, proxies=connection_proxies)
 
 def send_notification(msg):
     data = {
@@ -87,7 +96,7 @@ def send_notification(msg):
     token = config['telegram']['bot_token']
     url = f'https://api.telegram.org/bot{token}/sendMessage'
     print(f"Sending notification {data}")
-    requests.post(url, data)
+    requests.post(url, data, proxies=connection_proxies)
 
 
 def auto_action(label, find_by, el_type, action, value, sleep_time=0):
@@ -214,11 +223,10 @@ def get_date_from_telegram_message(message):
             if str(datetime.now().year) in element or str(datetime.now().year+1) in element:
                 return datetime.strptime(f'{text[i-2]} {text[i-1]} {text[i]}', '%d %B %Y').date()
     return None
-    
+
 class CustomHttpClient(HttpClient):
     def get(self, url, params=None) -> Response:
-        proxies={'http': config['download_proxy'], 'https': config['download_proxy']}
-        return requests.get(url, params, verify=False, proxies=proxies)
+        return requests.get(url, params, verify=False, proxies=download_proxies)
 
 if config['chrome_driver']['local_use']:
     options = webdriver.ChromeOptions()
@@ -227,14 +235,14 @@ if config['chrome_driver']['local_use']:
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--no-sandbox")
     if config['connection_proxy']:
-        options.add_argument(f"--proxy-server=\"{config['connection_proxy']}\"")
+        options.add_argument(f"--proxy-server=\"{connection_proxy_str}\"")
     http_client = CustomHttpClient()
     download_manager = WDMDownloadManager(http_client)
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager(download_manager=download_manager).install()), options=options)
 else:
     driver = webdriver.Remote(command_executor=config['chrome_driver']['hub_address'], options=webdriver.ChromeOptions())
 
-tele_client = TelegramClient(config['telegram']['session'], config['telegram']['api_id'], config['telegram']['api_hash']).start(phone=config['telegram']['phone_number'])
+tele_client = TelegramClient(config['telegram']['session'], config['telegram']['api_id'], config['telegram']['api_hash'], proxy=config['connection_proxy']).start(phone=config['telegram']['phone_number'])
     
 @tele_client.on(events.NewMessage(chats=[config['telegram']['channel_id']]))
 async def handler(event):
