@@ -34,3 +34,6 @@ time:
   retry_upper_bound: 120 # seconds
   step_time: 0.5 # seconds
   time_zone: 'Iran'
+
+download_proxy: null
+connection_proxy : null

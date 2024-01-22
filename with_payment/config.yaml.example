@@ -32,3 +32,6 @@ time:
   step_time: 0.5 # seconds
   time_zone: 'Iran'
   max_ban_retries: 5 # times
+
+download_proxy: null
+connection_proxy : null

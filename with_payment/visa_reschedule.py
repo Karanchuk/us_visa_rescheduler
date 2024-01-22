@@ -9,14 +9,20 @@ import yaml
 from datetime import datetime
 
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait as Wait
 from selenium.webdriver.common.by import By
+from webdriver_manager.core.http import HttpClient
 from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.core.download_manager import WDMDownloadManager
+from requests import Response
+import urllib3
 # from selenium.common.exceptions import NoSuchElementException
 from embassy import embassies
+
+os.environ['WDM_SSL_VERIFY'] = '0'
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', default='config.yaml')
@@ -120,7 +126,7 @@ def start_process(user_config, embassy_links):
     auto_action("Enter Panel", "name", "commit", "click", "", config['time']['step_time'])
     Wait(driver, 60).until(EC.presence_of_element_located((By.XPATH, "//a[contains(text(), '" + get_embassy_info(user_config['embassy'])['regex_continue'] + "')]")))
     print("\n\tlogin successful!\n")
-        
+
 def get_user_id():
     id = 0
     while True:
@@ -203,7 +209,7 @@ def get_accepted_date(dates, user_config, current_appointment_date):
 def info_logger(file_path, log):
     with open(file_path, "a") as file:
         file.write(str(datetime.now().time()) + ":\n" + log + "\n")
-        
+
 def mean(mylist: list):
     if len(mylist):
         return sum(mylist)/len(mylist)
@@ -212,17 +218,26 @@ def mean(mylist: list):
 def std(mylist: list):
     if len(mylist):
         mean_val = mean(mylist)
-        variance = sum([((x - mean_val) ** 2) for x in mylist]) / len(mylist) 
+        variance = sum([((x - mean_val) ** 2) for x in mylist]) / len(mylist)
         return variance ** 0.5
     return 0
 
+class CustomHttpClient(HttpClient):
+    def get(self, url, params=None) -> Response:
+        proxies={'http': config['download_proxy'], 'https': config['download_proxy']}
+        return requests.get(url, params, verify=False, proxies=proxies)
+
 if config['chrome_driver']['local_use']:
-    options = Options()
+    options = webdriver.ChromeOptions()
     options.add_argument("--headless")
     options.add_argument("--disable-extensions")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--no-sandbox")
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    if config['connection_proxy']:
+        options.add_argument(f"--proxy-server=\"{config['connection_proxy']}\"")
+    http_client = CustomHttpClient()
+    download_manager = WDMDownloadManager(http_client)
+    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager(download_manager=download_manager).install()), options=options)
 else:
     driver = webdriver.Remote(command_executor=config['chrome_driver']['hub_address'], options=webdriver.ChromeOptions())
 
@@ -288,7 +303,7 @@ if __name__ == "__main__":
                 reschedule_successful, msg = reschedule(accepted_date, user_config, embassy_links)
                 send_notification(msg)
                 current_appointment_date = get_current_appointment_date(user_config, embassy_links)
-            
+
             retry_wait_time = random.randint(config['time']['retry_lower_bound'], config['time']['retry_upper_bound'])
             total_time = time.time() - t0
             print("\nWorking Time:  ~ {:.2f} minutes".format(total_time/minute))
@@ -313,4 +328,3 @@ if __name__ == "__main__":
             driver.get(embassy_links['sign_out_link'])
             start_new_user = True
             time.sleep(random.randint(config['time']['retry_lower_bound'], config['time']['retry_upper_bound']))
-            

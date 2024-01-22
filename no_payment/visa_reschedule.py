@@ -9,14 +9,20 @@ import yaml
 from datetime import datetime, timedelta
 
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait as Wait
 from selenium.webdriver.common.by import By
+from webdriver_manager.core.http import HttpClient
 from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.core.download_manager import WDMDownloadManager
+from requests import Response
+import urllib3
 # from selenium.common.exceptions import NoSuchElementException
 from embassy import embassies
+
+os.environ['WDM_SSL_VERIFY'] = '0'
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', default='config.yaml')
@@ -232,13 +238,22 @@ def std(mylist: list):
         return variance ** 0.5
     return 0
 
+class CustomHttpClient(HttpClient):
+    def get(self, url, params=None) -> Response:
+        proxies={'http': config['download_proxy'], 'https': config['download_proxy']}
+        return requests.get(url, params, verify=False, proxies=proxies)
+
 if config['chrome_driver']['local_use']:
-    options = Options()
+    options = webdriver.ChromeOptions()
     options.add_argument("--headless")
     options.add_argument("--disable-extensions")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--no-sandbox")
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    if config['connection_proxy']:
+        options.add_argument(f"--proxy-server=\"{config['connection_proxy']}\"")
+    http_client = CustomHttpClient()
+    download_manager = WDMDownloadManager(http_client)
+    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager(download_manager=download_manager).install()), options=options)
 else:
     driver = webdriver.Remote(command_executor=config['chrome_driver']['hub_address'], options=webdriver.ChromeOptions())
 
