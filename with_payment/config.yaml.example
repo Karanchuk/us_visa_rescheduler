@@ -42,3 +42,8 @@ connection_proxy : # null
   proxy_type: "http"
   addr: "172.17.0.1"
   port: "20801"
+
+telegram_proxy : # null
+  proxy_type: "http"
+  addr: "172.17.0.1"
+  port: "20801"

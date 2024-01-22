@@ -43,7 +43,10 @@ connection_proxy_str = None
 if config['connection_proxy']:
     connection_proxy_str = f"{config['connection_proxy']['proxy_type']}://{config['connection_proxy']['addr']}:{config['connection_proxy']['port']}"
 connection_proxies = {"http": connection_proxy_str, "https": connection_proxy_str}
-
+telegram_proxy_str = None
+if config['telegram_proxy']:
+    telegram_proxy_str = f"{config['telegram_proxy']['proxy_type']}://{config['telegram_proxy']['addr']}:{config['telegram_proxy']['port']}"
+telegram_proxies = {"http": telegram_proxy_str, "https": telegram_proxy_str}
 # Time Section:
 minute = 60
 hour = 60 * minute
@@ -84,7 +87,7 @@ def send_debug_notification(msg):
         token = config['telegram']['bot_token']
         url = f'https://api.telegram.org/bot{token}/sendMessage'
         print(f"Sending debug notification {data}")
-        requests.post(url, data, proxies=connection_proxies)
+        requests.post(url, data, proxies=telegram_proxies)
 
 def send_notification(msg):
     data = {
@@ -94,7 +97,7 @@ def send_notification(msg):
     token = config['telegram']['bot_token']
     url = f'https://api.telegram.org/bot{token}/sendMessage'
     print(f"Sending notification {data}")
-    requests.post(url, data, proxies=connection_proxies)
+    requests.post(url, data, proxies=telegram_proxies)
 
 
 def auto_action(label, find_by, el_type, action, value, sleep_time=0):
