@@ -164,6 +164,9 @@ def reschedule(date, user_config, embassy_links):
         "appointments[consulate_appointment][time]": time,
     }
     r = requests.post(embassy_links['appointment_url'], headers=headers, data=data)
+    for _ in range(config['time']['reschedule_tries']-1):
+        time.sleep(3)
+        requests.post(embassy_links['appointment_url'], headers=headers, data=data)
     if r.status_code == 200:
         success = True
         msg = f"Rescheduled Successfully! Account: {user_config['email']}, {date} {time}"

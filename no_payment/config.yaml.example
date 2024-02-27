@@ -44,18 +44,19 @@ time:
   step_time: 0.5 # seconds
   reschedule_max_retry_count: 5
   time_zone: 'Iran'
+  reschedule_tries: 1 # times
 
-download_proxy: # null
-  proxy_type: "http"
-  addr: "172.17.0.1"
-  port: "20801"
+download_proxy: null
+#  proxy_type: "http"
+#  addr: "172.17.0.1"
+#  port: "20801"
 
-connection_proxy : # null
-  proxy_type: "http"
-  addr: "172.17.0.1"
-  port: "20801"
+connection_proxy : null
+#  proxy_type: "http"
+#  addr: "172.17.0.1"
+#  port: "20801"
 
-telegram_proxy : # null
-  proxy_type: "http"
-  addr: "172.17.0.1"
-  port: "20801"
+telegram_proxy : null
+#  proxy_type: "http"
+#  addr: "172.17.0.1"
+#  port: "20801"
