@@ -142,7 +142,7 @@ def start_process(user_config, embassy_links):
     print("\n\tlogin successful!\n")
 
 def reschedule(date, user_config, embassy_links):
-    time = get_time(date, embassy_links)
+    appointment_time = get_time(date, embassy_links)
     driver.get(embassy_links['appointment_url'])
     try:
         btn = driver.find_element(By.XPATH, '//*[@id="main"]/div[3]/form/div[2]/div/input')
@@ -161,7 +161,7 @@ def reschedule(date, user_config, embassy_links):
         "use_consulate_appointment_capacity": driver.find_element(by=By.NAME, value='use_consulate_appointment_capacity').get_attribute('value'),
         "appointments[consulate_appointment][facility_id]": get_embassy_info(user_config['embassy'])['facility_id'],
         "appointments[consulate_appointment][date]": date,
-        "appointments[consulate_appointment][time]": time,
+        "appointments[consulate_appointment][time]": appointment_time,
     }
     r = requests.post(embassy_links['appointment_url'], headers=headers, data=data)
     for _ in range(config['time']['reschedule_tries']-1):
@@ -169,10 +169,10 @@ def reschedule(date, user_config, embassy_links):
         requests.post(embassy_links['appointment_url'], headers=headers, data=data)
     if r.status_code == 200:
         success = True
-        msg = f"Rescheduled Successfully! Account: {user_config['email']}, {date} {time}"
+        msg = f"Rescheduled Successfully! Account: {user_config['email']}, {date} {appointment_time}"
     else:
         success = False
-        msg = f"Reschedule Failed! Account: {user_config['email']}, {date} {time}"
+        msg = f"Reschedule Failed! Account: {user_config['email']}, {date} {appointment_time}"
     return [success, msg]
 
 
