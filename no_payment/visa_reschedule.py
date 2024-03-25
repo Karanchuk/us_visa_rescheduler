@@ -373,7 +373,7 @@ if __name__ == "__main__":
                 for appointment in appointments:
                     msg += str(appointments[appointment]) + ' '
                 send_debug_notification(msg[:-1])
-                info_logger(log_file_name, msg)
+                info_logger(log_file_name, msg[:-1])
                 for paid_user_config in config['paid_users']:
                     reschedule_successful = False
                     for new_available_date in appointments.values():
