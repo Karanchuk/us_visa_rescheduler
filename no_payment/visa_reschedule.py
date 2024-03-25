@@ -166,8 +166,24 @@ def reschedule(date, user_config, embassy_links):
     appointment_time = get_time(date, embassy_links)
     driver.get(embassy_links['appointment_url'])
     try:
-        btn = driver.find_element(By.XPATH, '//*[@id="main"]/div[3]/form/div[2]/div/input')
-        btn.click()
+        warning_text_elem = driver.find_elements(by=By.XPATH, value=f'//*[@id="main"]/div[3]/div/div/div/p')
+        if warning_text_elem:
+            warning_text = warning_text_elem[0]
+            max_reschedule_count = int(warning_text.split("There is a maximum number of ")[1].split(" ")[0]) = 0
+            print(f"max reschedule count: {max_reschedule_count}") = 0
+            curr_reschedule_count = int(warning_text.split("You have ")[1].split(" ")[0]) = 0
+            print(f"current reschedule count: {curr_reschedule_count}") = 0
+            if (curr_reschedule_count >= max_reschedule_count - 1) or (curr_reschedule_count >= config['time']['max_reschedule_count']):
+                success = False
+                msg = f"Reschedule Failed! Maximum reschedule count reached. Account: {user_config['email']}, {date} {appointment_time}"
+                return [success, msg]
+        auto_action("Schedule limit checkbox", "class", "icheckbox", "click", "", config['time']['step_time'])
+        auto_action("Schedule limit continue", "name", "commit", "click", "", config['time']['step_time'])
+        print("passed schedule limit.")
+    except:
+        print("no schedule limit.")
+    try:
+        auto_action("Multi applicant continue", "name", "commit", "click", "", config['time']['step_time'])
         print("multiple applicants.")
     except:
         print("single applicants.")
@@ -281,9 +297,12 @@ if __name__ == "__main__":
     unpaid_signed_out = True
     ban_timestamps = {}
     banned_count = 0
+    reschedule_count = 0
     exception_occured = False
     while 1:
         try:
+            if reschedule_count >= (config['time']['max_reschedule_count']-config['time']['curr_reschedule_count']):
+                exit()
             current_date = str(datetime.now().date())
             log_file_name = f"log_{current_date}.txt"
             if current_date != previous_date:
@@ -375,6 +394,8 @@ if __name__ == "__main__":
                                     accepted_date = get_accepted_date(available_dates, paid_user_config, current_appointment_date)
                                     if accepted_date:
                                         reschedule_successful, msg = reschedule(accepted_date, paid_user_config, paid_user_embassy_links)
+                                        if reschedule_successful:
+                                            reschedule_count += 1
                                         send_notification(msg)
                                     else:
                                         send_debug_notification(f"Unpaid account {user_config['email']} found {new_available_date} but it was not available for paid account {paid_user_config['email']}. Rescheduling failed.")
