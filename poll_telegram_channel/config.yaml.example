@@ -35,6 +35,7 @@ time:
   step_time: 0.5 # seconds
   time_zone: 'Iran'
   reschedule_tries: 1 # times
+  max_reschedule_count: 1 # times
 
 download_proxy: null
 #  proxy_type: "http"

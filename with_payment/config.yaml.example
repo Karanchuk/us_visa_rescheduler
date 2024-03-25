@@ -33,6 +33,7 @@ time:
   time_zone: 'Iran'
   max_ban_retries: 5 # times
   reschedule_tries: 1 # times
+  max_reschedule_count: 1 # times
 
 download_proxy: null
 #  proxy_type: "http"

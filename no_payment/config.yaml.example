@@ -45,8 +45,7 @@ time:
   reschedule_max_retry_count: 5
   time_zone: 'Iran'
   reschedule_tries: 1 # times
-  curr_reschedule_count: 4 # times
-  max_reschedule_count: 5 # times
+  max_reschedule_count: 1 # times
 
 download_proxy: null
 #  proxy_type: "http"

@@ -29,6 +29,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', default='config.yaml')
 args = parser.parse_args()
+reschedule_count = 0
 
 config = {}
 with open(args.config) as f:
@@ -145,8 +146,24 @@ def reschedule(date, user_config, embassy_links):
     appointment_time = get_time(date, embassy_links)
     driver.get(embassy_links['appointment_url'])
     try:
-        btn = driver.find_element(By.XPATH, '//*[@id="main"]/div[3]/form/div[2]/div/input')
-        btn.click()
+        warning_text_elem = driver.find_elements(by=By.XPATH, value=f'//*[@id="main"]/div[3]/div/div/div/p')
+        if warning_text_elem:
+            warning_text = warning_text_elem[0].text
+            max_reschedule_count = int(warning_text.split("There is a maximum number of ")[1].split(" ")[0])
+            print(f"max reschedule count: {max_reschedule_count}")
+            remaining_reschedule_count = int(warning_text.split("You have ")[1].split(" ")[0])
+            print(f"remaining reschedule count: {remaining_reschedule_count}")
+            if (remaining_reschedule_count <= 1):
+                success = False
+                msg = f"Reschedule Failed! Maximum reschedule count reached. Account: {user_config['email']}, {date} {appointment_time}"
+                return [success, msg]
+        auto_action("Schedule limit checkbox", "class", "icheckbox", "click", "", config['time']['step_time'])
+        auto_action("Schedule limit continue", "name", "commit", "click", "", config['time']['step_time'])
+        print("passed schedule limit.")
+    except:
+        print("no schedule limit.")
+    try:
+        auto_action("Multi applicant continue", "name", "commit", "click", "", config['time']['step_time'])
         print("multiple applicants.")
     except:
         print("single applicants.")
@@ -252,7 +269,11 @@ tele_client = TelegramClient(config['telegram']['session'], config['telegram']['
     
 @tele_client.on(events.NewMessage(chats=[config['telegram']['channel_id']]))
 async def handler(event):
+    global reschedule_count
     try:
+        if reschedule_count >= config['time']['max_reschedule_count']:
+            send_notification("Maximum reschedule count reached. Exiting...")
+            exit()
         new_date = get_date_from_telegram_message(event)
         if new_date is None:
             msg = 'New message received but found no date.\n'
@@ -286,7 +307,9 @@ async def handler(event):
                     print(f'Available dates for user: {user_config["email"]}:\n {msg[:-2]}')
                     accepted_date = get_accepted_date(available_dates, user_config, current_appointment_date)
                     if accepted_date:
-                        _ , msg = reschedule(accepted_date, user_config, embassy_links)
+                        reschedule_successful, msg = reschedule(accepted_date, user_config, embassy_links)
+                        if reschedule_successful:
+                            reschedule_count += 1
                         send_notification(msg)
                     driver.get(embassy_links['sign_out_link'])
     except:
