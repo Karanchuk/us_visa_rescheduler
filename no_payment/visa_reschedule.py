@@ -401,10 +401,13 @@ if __name__ == "__main__":
                                         send_notification(msg)
                                         info_logger(log_file_name, msg)
                                     else:
-                                        send_debug_notification(f"Unpaid account {user_config['email']} found {new_available_date} but it was not available for paid account {paid_user_config['email']}. Rescheduling failed.")
+                                        msg = f"Unpaid account {user_config['email']} found {new_available_date} but it was not available for paid account {paid_user_config['email']}. Rescheduling failed."
+                                        send_debug_notification(msg)
                                         info_logger(log_file_name, msg)
                                 else:
-                                    send_debug_notification(f"Paid account: {paid_user_config['email']} is banned. Could not reschedule for {new_available_date}")
+                                    msg = f"Paid account: {paid_user_config['email']} is banned. Could not reschedule for {new_available_date}"
+                                    send_debug_notification(msg)
+                                    info_logger(log_file_name, msg)
                                 reschedule_retry_count += 1
                             driver.get(paid_user_embassy_links['sign_out_link'])
                         else:
