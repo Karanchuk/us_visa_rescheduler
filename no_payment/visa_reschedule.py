@@ -373,6 +373,7 @@ if __name__ == "__main__":
                 for appointment in appointments:
                     msg += str(appointments[appointment]) + ' '
                 send_debug_notification(msg[:-1])
+                info_logger(log_file_name, msg)
                 for paid_user_config in config['paid_users']:
                     reschedule_successful = False
                     for new_available_date in appointments.values():
@@ -398,8 +399,10 @@ if __name__ == "__main__":
                                         if reschedule_successful:
                                             reschedule_count += 1
                                         send_notification(msg)
+                                        info_logger(log_file_name, msg)
                                     else:
                                         send_debug_notification(f"Unpaid account {user_config['email']} found {new_available_date} but it was not available for paid account {paid_user_config['email']}. Rescheduling failed.")
+                                        info_logger(log_file_name, msg)
                                 else:
                                     send_debug_notification(f"Paid account: {paid_user_config['email']} is banned. Could not reschedule for {new_available_date}")
                                 reschedule_retry_count += 1

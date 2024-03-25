@@ -271,6 +271,8 @@ tele_client = TelegramClient(config['telegram']['session'], config['telegram']['
 async def handler(event):
     global reschedule_count
     try:
+        current_date = str(datetime.now().date())
+        log_file_name = f"log_{current_date}.txt"
         if reschedule_count >= config['time']['max_reschedule_count']:
             send_notification("Maximum reschedule count reached. Exiting...")
             exit()
@@ -287,6 +289,7 @@ async def handler(event):
             for user_config in config['users']:
                 if is_in_period(new_date, datetime.strptime(user_config['period_start'], "%Y-%m-%d").date() , datetime.strptime(user_config['period_end'], "%Y-%m-%d").date()):
                     send_notification(msg)
+                    info_logger(log_file_name, msg)
                     embassy_links = get_links_for_embassy(user_config)
                     start_process(user_config, embassy_links)
                     current_appointment_date = get_current_appointment_date(user_config, embassy_links)
@@ -295,8 +298,6 @@ async def handler(event):
                         print(f"Probably user {user_config['email']} is banned.")
                         msg = f"User {user_config['email']} got banned. Ban time: {datetime.now()}"
                         print(msg)
-                        current_date = str(datetime.now().date())
-                        log_file_name = f"log_{current_date}.txt"
                         info_logger(log_file_name, msg)
                         send_debug_notification(msg)
                         driver.get(embassy_links['sign_out_link'])
@@ -311,6 +312,7 @@ async def handler(event):
                         if reschedule_successful:
                             reschedule_count += 1
                         send_notification(msg)
+                        info_logger(log_file_name, msg)
                     driver.get(embassy_links['sign_out_link'])
     except:
         print(f"Exception occured!")

@@ -338,6 +338,7 @@ if __name__ == "__main__":
                 if reschedule_successful:
                     reschedule_count += 1
                 send_notification(msg)
+                info_logger(log_file_name, msg)
                 current_appointment_date = get_current_appointment_date(user_config, embassy_links)
 
             retry_wait_time = random.randint(config['time']['retry_lower_bound'], config['time']['retry_upper_bound'])
