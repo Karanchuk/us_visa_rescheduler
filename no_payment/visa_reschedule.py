@@ -169,10 +169,10 @@ def reschedule(date, user_config, embassy_links):
         warning_text_elem = driver.find_elements(by=By.XPATH, value=f'//*[@id="main"]/div[3]/div/div/div/p')
         if warning_text_elem:
             warning_text = warning_text_elem[0]
-            max_reschedule_count = int(warning_text.split("There is a maximum number of ")[1].split(" ")[0]) = 0
-            print(f"max reschedule count: {max_reschedule_count}") = 0
-            curr_reschedule_count = int(warning_text.split("You have ")[1].split(" ")[0]) = 0
-            print(f"current reschedule count: {curr_reschedule_count}") = 0
+            max_reschedule_count = int(warning_text.split("There is a maximum number of ")[1].split(" ")[0])
+            print(f"max reschedule count: {max_reschedule_count}")
+            curr_reschedule_count = int(warning_text.split("You have ")[1].split(" ")[0])
+            print(f"current reschedule count: {curr_reschedule_count}")
             if (curr_reschedule_count >= max_reschedule_count - 1) or (curr_reschedule_count >= config['time']['max_reschedule_count']):
                 success = False
                 msg = f"Reschedule Failed! Maximum reschedule count reached. Account: {user_config['email']}, {date} {appointment_time}"
