@@ -335,11 +335,15 @@ if __name__ == "__main__":
             accepted_date = get_accepted_date(available_dates, user_config, current_appointment_date)
             if accepted_date:
                 reschedule_successful, msg = reschedule(accepted_date, user_config, embassy_links)
-                if reschedule_successful:
-                    reschedule_count += 1
                 send_notification(msg)
                 info_logger(log_file_name, msg)
-                current_appointment_date = get_current_appointment_date(user_config, embassy_links)
+                # current_appointment_date = get_current_appointment_date(user_config, embassy_links)
+                if reschedule_successful:
+                    reschedule_count += 1
+                    current_appointment_date = datetime.strptime(accepted_date,
+                                                                 "%Y-%m-%d").date()
+                    info_logger(log_file_name, current_appointment_date)
+                    exit()
 
             retry_wait_time = random.randint(config['time']['retry_lower_bound'], config['time']['retry_upper_bound'])
             total_time = time.time() - t0
