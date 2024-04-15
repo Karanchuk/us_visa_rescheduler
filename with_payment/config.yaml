@@ -1,0 +1,26 @@
+users:
+  - email: 'vse.shabalin@gmail.com'
+    password: '$haB@lin!991'
+    schedule_id: 53984933
+    group_id: 53984933
+    embassy: 'en-ca-van'
+    period_start: '2026-04-17'
+    period_end: '2026-05-15'
+time:
+  retry_lower_bound: 10 # seconds
+  retry_upper_bound: 120 # seconds
+  work_limit_hours: 1.5 # hours
+  work_cooldown_hours: 2.25 # hours
+  ban_cooldown_hours: 5 # hours
+  step_time: 0.5 # seconds
+  time_zone: 'Vancouver'
+  max_ban_retries: 5 # times
+  reschedule_tries: 1 # times
+  max_reschedule_count: 1 # times
+download_proxy: null
+connection_proxy : null
+telegram_proxy : null
+chrome_driver:
+  local_use: True
+telegram:
+  debug_chat_id: null

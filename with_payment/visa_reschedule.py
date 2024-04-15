@@ -90,14 +90,15 @@ def send_debug_notification(msg):
         requests.post(url, data, proxies=telegram_proxies)
 
 def send_notification(msg):
-    data = {
-        'chat_id': config['telegram']['chat_id'],
-        'text': msg,
-    }
-    token = config['telegram']['bot_token']
-    url = f'https://api.telegram.org/bot{token}/sendMessage'
-    print(f"Sending notification {data}")
-    requests.post(url, data, proxies=telegram_proxies)
+    if 'telegram' in config and 'chat_id' in config['telegram']:
+        data = {
+            'chat_id': config['telegram']['chat_id'],
+            'text': msg,
+        }
+        token = config['telegram']['bot_token']
+        url = f'https://api.telegram.org/bot{token}/sendMessage'
+        print(f"Sending notification {data}")
+        requests.post(url, data, proxies=telegram_proxies)
 
 
 def auto_action(label, find_by, el_type, action, value, sleep_time=0):
@@ -279,9 +280,16 @@ if __name__ == "__main__":
     ban_retry_count = 0
     exception_occured = False
     reschedule_count = 0
+    skipped_users = set()
+
     while 1:
         try:
+            if len(skipped_users) == len(config['users']):
+                print(f"All users have been scheduled. Exiting...")
+                send_notification("All users have been scheduled. Exiting...")
+                break
             if reschedule_count >= config['time']['max_reschedule_count']:
+                print(f"Maximum reschedule count reached. Exiting...")
                 send_notification("Maximum reschedule count reached. Exiting...")
                 exit()
             current_date = str(datetime.now().date())
@@ -296,6 +304,8 @@ if __name__ == "__main__":
                     retry_wait_times = []
                     Req_count = 0
                     user_id = next(get_user)
+                    if user_id in skipped_users:
+                        continue
                     user_config = config['users'][user_id]
                     embassy_links = get_links_for_embassy(user_config)
                 exception_occured = False
@@ -335,20 +345,17 @@ if __name__ == "__main__":
             accepted_date = get_accepted_date(available_dates, user_config, current_appointment_date)
             if accepted_date:
                 reschedule_successful, msg = reschedule(accepted_date, user_config, embassy_links)
-                send_notification(msg)
-                info_logger(log_file_name, msg)
-                # current_appointment_date = get_current_appointment_date(user_config, embassy_links)
                 if reschedule_successful:
                     reschedule_count += 1
-                    current_appointment_date = datetime.strptime(accepted_date,
-                                                                 "%Y-%m-%d").date()
-                    info_logger(log_file_name, current_appointment_date)
-                    exit()
+                    skipped_users.add(user_id)
+                send_notification(msg)
+                info_logger(log_file_name, msg)
+                current_appointment_date = get_current_appointment_date(user_config, embassy_links)
 
             retry_wait_time = random.randint(config['time']['retry_lower_bound'], config['time']['retry_upper_bound'])
             total_time = time.time() - t0
             print("\nWorking Time:  ~ {:.2f} minutes".format(total_time/minute))
-            if total_time > config['time']['work_limit_hours'] * hour and config['time']['work_cooldown_hours'] > 0:
+            if (total_time > config['time']['work_limit_hours'] * hour and config['time']['work_cooldown_hours'] > 0):
                 # Let program rest a little
                 print("REST", f"Break-time after {config['time']['work_limit_hours']} hours | Repeated {Req_count} times")
                 driver.get(embassy_links['sign_out_link'])
